@@ -14,6 +14,12 @@ public class Main {
         bst.insert(40);
         bst.insert(80);
         bst.prettyPrint();
+        bst.delete(8);
+        bst.insert(6);
+        bst.delete(6);
+        bst.delete(80);
+        bst.delete(1);
+        bst.prettyPrint();
         bst.search(165);
     }
 

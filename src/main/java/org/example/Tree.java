@@ -122,10 +122,6 @@ public class Tree {
         x.parent = y;
     }
 
-    public void delete(int value){
-
-    }
-
     public Node search(int value){
         Node result = this.root;
         while (result != nilNode){
@@ -137,13 +133,120 @@ public class Tree {
                 result = result.right;
         }
         if (result == nilNode) {
-            System.out.print("No such value in tree");
+            System.out.print("No such value in tree\n");
             return result;
         }
-        System.out.print("Node with value " + value + " successfully found");
+        System.out.print("Node with value " + value + " successfully found\n");
         return result;
     }
 
+
+    public void delete(int value){
+        Node nodeToDelete = search(value);
+        if (nodeToDelete == nilNode)
+            return;
+        Node nodeForBalance;
+        boolean deleteColor = nodeToDelete.isBlack;
+        if(nodeToDelete.left == nilNode) {
+            nodeForBalance = nodeToDelete.right;
+            replaceA_with_B(nodeToDelete, nodeToDelete.right);
+        } else if (nodeToDelete.right == nilNode) {
+            nodeForBalance = nodeToDelete.left;
+            replaceA_with_B(nodeToDelete, nodeToDelete.left);
+        } else {
+            Node temp = minimum(nodeToDelete.right);
+            deleteColor = temp.isBlack;
+            nodeForBalance = temp.right;
+            if (temp.parent == nodeToDelete) {
+                nodeForBalance.parent = temp;
+            } else {
+                replaceA_with_B(temp, temp.right);
+                temp.right = nodeToDelete.right;
+                temp.right.parent = temp;
+            }
+
+            replaceA_with_B(nodeToDelete, temp);
+            temp.left = nodeToDelete.left;
+            temp.left.parent = temp;
+            temp.isBlack = nodeToDelete.isBlack;
+        }
+        if (deleteColor)
+            balanceDelete(nodeForBalance);
+    }
+
+    private void balanceDelete(Node nodeForBalance) {
+        Node sibling;
+        while (nodeForBalance != root && nodeForBalance.isBlack) {
+            if (nodeForBalance == nodeForBalance.parent.left) {
+                sibling = nodeForBalance.parent.right;
+                if (!sibling.isBlack) {
+                    sibling.isBlack = true;
+                    nodeForBalance.parent.isBlack = false;
+                    leftRotate(nodeForBalance.parent);
+                    sibling = nodeForBalance.parent.right;
+                }
+                if(sibling.left.isBlack && sibling.right.isBlack) {
+                    sibling.isBlack = false;
+                    nodeForBalance = nodeForBalance.parent;
+                } else {
+                    if (sibling.right.isBlack) {
+                        sibling.left.isBlack = true;
+                        sibling.isBlack = false;
+                        rightRotate(sibling);
+                        sibling = nodeForBalance.parent.right;
+                    }
+                    sibling.isBlack = nodeForBalance.parent.isBlack;
+                    nodeForBalance.parent.isBlack = true;
+                    sibling.right.isBlack = true;
+                    leftRotate(nodeForBalance.parent);
+                    nodeForBalance = root;
+                }
+            } else {
+                sibling = nodeForBalance.parent.left;
+                if (!sibling.isBlack) {
+                    sibling.isBlack = true;
+                    nodeForBalance.parent.isBlack = false;
+                    rightRotate(nodeForBalance.parent);
+                    sibling = nodeForBalance.parent.left;
+                }
+                if (sibling.right.isBlack) {
+                    sibling.isBlack = false;
+                    nodeForBalance = nodeForBalance.parent;
+                } else {
+                    if(sibling.left.isBlack) {
+                        sibling.right.isBlack = true;
+                        sibling.isBlack = false;
+                        leftRotate(sibling);
+                        sibling = nodeForBalance.parent.left;
+                    }
+                    sibling.isBlack = nodeForBalance.parent.isBlack;
+                    nodeForBalance.parent.isBlack = true;
+                    sibling.left.isBlack = true;
+                    rightRotate(nodeForBalance.parent);
+                    nodeForBalance = root;
+                }
+            }
+        }
+        nodeForBalance.isBlack = true;
+    }
+
+    public Node minimum(Node node) {
+        while (node.left != nilNode) {
+            node = node.left;
+        }
+        return node;
+    }
+
+    public void replaceA_with_B(Node a, Node b){
+        if(this.root == a)
+            this.root = b;
+        else if(a == a.parent.left)
+            a.parent.left = b;
+        else if(a == a.parent.right)
+            a.parent.right = b;
+        b.parent = a.parent;
+
+    }
 
 
 
@@ -165,7 +268,7 @@ public class Tree {
                 indent += "|    ";
             }
 
-            String sColor = root.isBlack == false?"RED":"BLACK";
+            String sColor = !root.isBlack ?"RED":"BLACK";
             System.out.println(root.data + "(" + sColor + ")");
             printHelper(root.left, indent, false);
             printHelper(root.right, indent, true);
